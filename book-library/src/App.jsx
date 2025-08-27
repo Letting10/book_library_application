@@ -1,11 +1,10 @@
 import React from "react";
+import Hero from "./assets/components/Hero"; 
 
 export default function App() {
   return (
-    <div className="min-h-screen grid place-items-center bg-gray-900">
-      <h1 className="text-5xl font-extrabold text-green-200">
-        ✅ TailwindCSS is Working!
-      </h1>
+    <div className="min-h-screen bg-gray-900">
+      <Hero />
     </div>
   );
 }
