@@ -1,24 +1,27 @@
-import React from "react";
+import React, { useState } from 'react';
 
-export default function SearchBar({ value, onChange, onSubmit }) {
+export default function SearchBar({ onSearch }) {
+  const [query, setQuery] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (query.trim() !== '') {
+      onSearch(query.trim());
+    }
+  };
+
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit();
-      }}
-      className="flex justify-center my-6"
-    >
+    <form onSubmit={handleSubmit} className="flex justify-center mb-4">
       <input
         type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Search books..."
-        className="px-4 py-2 border rounded-l w-72"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search books by title or author"
+        className="border rounded-l px-4 py-2 w-64 focus:outline-none"
       />
       <button
         type="submit"
-        className="px-4 py-2 bg-blue-600 text-white rounded-r hover:bg-blue-700"
+        className="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700"
       >
         Search
       </button>

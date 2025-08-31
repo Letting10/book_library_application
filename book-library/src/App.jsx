@@ -1,49 +1,56 @@
-import React, { useState } from "react";
-import Hero from "./components/Hero";
-import SearchBar from "./components/SearchBar";
-import BookCard from "./components/BookCard";
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import BookCard from './components/BookCard';
+import BookDetails from './components/BookDetails';
+import SearchBar from './components/SearchBar';
 
 export default function App() {
-  const [query, setQuery] = useState("");
   const [books, setBooks] = useState([]);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const fetchBooks = async () => {
+  const handleSearch = async (query) => {
     if (!query) return;
-    setError("");
-    setBooks([]);
+    setLoading(true);
+    setError('');
+
     try {
-      const response = await fetch(
-        `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}`
-      );
-      if (!response.ok) throw new Error("Network response was not ok");
-      const data = await response.json();
-      if (data.docs.length === 0) {
-        setError("No books found.");
+      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      if (data.totalItems > 0 && data.items) {
+        setBooks(data.items);
       } else {
-        setBooks(data.docs);
+        setBooks([]);
+        setError('No books found.');
       }
-    } catch (err) {
-      setError("Failed to fetch books. Please try again.");
+    } catch {
+      setBooks([]);
+      setError('Failed to fetch books. Try again.');
     }
+
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans">
-      <Hero />
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <SearchBar value={query} onChange={setQuery} onSubmit={fetchBooks} />
-        {error && (
-          <div className="text-red-600 text-center mb-4 font-semibold bg-red-100 rounded p-2">
-            {error}
-          </div>
-        )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
-          {books.map((book) => (
-            <BookCard key={book.key} book={book} />
-          ))}
-        </div>
+    <Router>
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold text-center mb-4">Book Library</h1>
+        <Routes>
+          <Route path="/" element={
+            <>
+              <SearchBar onSearch={handleSearch} />
+              {loading && <p className="text-center">Loading books...</p>}
+              {error && <p className="text-center text-red-500">{error}</p>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {books.map(book => (
+                  <BookCard key={book.id} book={book} />
+                ))}
+              </div>
+            </>
+          }/>
+          <Route path="/book/:id" element={<BookDetails />} />
+        </Routes>
       </div>
-    </div>
+    </Router>
   );
 }

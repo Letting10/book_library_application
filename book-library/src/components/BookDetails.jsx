@@ -1,30 +1,52 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-export default function BookDetails({ book, onClose }) {
-  const olid = book.cover_edition_key || book.edition_key?.[0];
-  const readUrl = olid
-    ? `https://openlibrary.org/books/${olid}/reader`
-    : null;
+export default function BookDetails() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [book, setBook] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!id) return;
+
+    fetch(`https://www.googleapis.com/books/v1/volumes/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          setError('No details found for this book.');
+        } else {
+          setBook(data);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Failed to fetch book details.');
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) return <p>Loading book details...</p>;
+  if (error) return (
+    <div className="p-4">
+      <button className="mb-4" onClick={() => navigate(-1)}>Back</button>
+      <p>{error}</p>
+    </div>
+  );
+
+  const info = book.volumeInfo;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center p-4 z-50 overflow-auto">
-      <button
-        onClick={onClose}
-        className="self-end mb-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-      >
-        Close
-      </button>
-      {readUrl ? (
-        <iframe
-          src={readUrl}
-          className="w-full max-w-4xl h-[80vh] rounded shadow-lg"
-          title={book.title}
-        ></iframe>
-      ) : (
-        <p className="text-white text-center text-lg">
-          Sorry, this book cannot be read online.
-        </p>
-      )}
+    <div className="p-4">
+      <button className="mb-4" onClick={() => navigate(-1)}>Back</button>
+      <h1 className="text-xl font-bold mb-2">{info.title}</h1>
+      <p><strong>Authors:</strong> {info.authors?.join(', ')}</p>
+      <p><strong>Publisher:</strong> {info.publisher}</p>
+      <p><strong>Published:</strong> {info.publishedDate}</p>
+      <p><strong>Pages:</strong> {info.pageCount}</p>
+      <p><strong>Categories:</strong> {info.categories?.join(', ')}</p>
+      <p><strong>Description:</strong> {info.description}</p>
     </div>
   );
 }
